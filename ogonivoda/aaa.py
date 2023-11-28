@@ -10,167 +10,174 @@ bg = pygame.image.load('bg.jpg')
 
 
 # Класс, описывающий поведение главного игрока
-class Player(pygame.sprite.Sprite):
-	# Изначально игрок смотрит вправо, поэтому эта переменная True
-	right = True
+class Character(pygame.sprite.Sprite):
+    # Изначально игрок смотрит вправо, поэтому эта переменная True
+    right = True
 
-	# Методы
-	def __init__(self):
-		# Стандартный конструктор класса
-		# Нужно ещё вызывать конструктор родительского класса
-		super().__init__()
+    # Методы
+    def __init__(self):
+        # Стандартный конструктор класса
+        # Нужно ещё вызывать конструктор родительского класса
+        super().__init__()
 
-		# Создаем изображение для игрока
-		# Изображение находится в этой же папке проекта
-		self.image = pygame.image.load('idle.png')
+        # Создаем изображение для игрока
+        # Изображение находится в этой же папке проекта
+        self.image = pygame.image.load('idle.png')
 
-		# Установите ссылку на изображение прямоугольника
-		self.rect = self.image.get_rect()
+        # Установите ссылку на изображение прямоугольника
+        self.rect = self.image.get_rect()
 
-		# Задаем вектор скорости игрока
-		self.change_x = 0
-		self.change_y = 0
-
-
-		self.in_air = True
-
-	def update(self):
-		# В этой функции мы передвигаем игрока
-		# Сперва устанавливаем для него гравитацию
-		self.calc_grav()
-
-		# Передвигаем его на право/лево
-		# change_x будет меняться позже при нажатии на стрелочки клавиатуры
-		self.rect.x += self.change_x
-
-		# Следим ударяем ли мы какой-то другой объект, платформы, например
-		block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-		# Перебираем все возможные объекты, с которыми могли бы столкнуться
-		for block in block_hit_list:
-			# Если мы идем направо,
-			# устанавливает нашу правую сторону на левой стороне предмета, которого мы ударили
-			if self.change_x > 0:
-				self.rect.right = block.rect.left
-			elif self.change_x < 0:
-				# В противном случае, если мы движемся влево, то делаем наоборот
-				self.rect.left = block.rect.right
-
-		# Передвигаемся вверх/вниз
-		self.rect.y += self.change_y
-
-		# То же самое, вот только уже для вверх/вниз
-		block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-		for block in block_hit_list:
-			# Устанавливаем нашу позицию на основе верхней / нижней части объекта, на который мы попали
-			if self.change_y > 0:
-				self.rect.bottom = block.rect.top
-			elif self.change_y < 0:
-				self.rect.top = block.rect.bottom
-
-			# Останавливаем вертикальное движение
-			self.change_y = 0
-		# Проверка на нахождение в воздухе
-		self.rect.y += 2  # Смещение немного вниз
-		platforms = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-		self.rect.y -= 2  # Возвращаемся обратно
-
-		# Если нет коллизий, игрок в воздухе
-		self.in_air = not bool(platforms)
-
-	def calc_grav(self):
-		# Здесь мы вычисляем как быстро объект будет
-		# падать на землю под действием гравитации
-		if self.change_y == 0:
-			self.change_y = 1
-		else:
-			self.change_y += .95
-
-		# Если уже на земле, то ставим позицию Y как 0
-		if self.rect.y >= SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
-			self.change_y = 0
-			self.rect.y = SCREEN_HEIGHT - self.rect.height
-
-	def jump(self):
-		# Обработка прыжка
-		# Нам нужно проверять здесь, контактируем ли мы с чем-либо
-		# или другими словами, не находимся ли мы в полете.
-		# Для этого опускаемся на 10 единиц, проверем соприкосновение и далее поднимаемся обратно
-		self.rect.y += 10
-		platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
-		self.rect.y -= 10
-
-		# Если все в порядке, прыгаем вверх
-		if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-			self.change_y = -15
-
-	# Передвижение игрока
-	def go_left(self):
-		if self.in_air:
-			self.change_x = -3  # Изменение скорости при движении в воздухе
-		else:
-			self.change_x = -6
-
-		if self.right:
-			self.flip()
-			self.right = False
-
-	def go_right(self):
-		if self.in_air:
-			self.change_x = 3  # Изменение скорости при движении в воздухе
-		else:
-			self.change_x = 6
-
-		if not self.right:
-			self.flip()
-			self.right = True
+        # Задаем вектор скорости игрока
+        self.change_x = 0
+        self.change_y = 0
 
 
-	def stop(self):
-		# вызываем этот метод, когда не нажимаем на клавиши
-		self.change_x = 0
+        self.in_air = True
 
-	def flip(self):
-		# переворот игрока (зеркальное отражение)
-		self.image = pygame.transform.flip(self.image, True, False)
+    def update(self):
+        # В этой функции мы передвигаем игрока
+        # Сперва устанавливаем для него гравитацию
+        self.calc_grav()
+
+        # Передвигаем его на право/лево
+        # change_x будет меняться позже при нажатии на стрелочки клавиатуры
+        self.rect.x += self.change_x
+
+        # Следим ударяем ли мы какой-то другой объект, платформы, например
+        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        # Перебираем все возможные объекты, с которыми могли бы столкнуться
+        for block in block_hit_list:
+            # Если мы идем направо,
+            # устанавливает нашу правую сторону на левой стороне предмета, которого мы ударили
+            if self.change_x > 0:
+                self.rect.right = block.rect.left
+            elif self.change_x < 0:
+                # В противном случае, если мы движемся влево, то делаем наоборот
+                self.rect.left = block.rect.right
+
+        # Передвигаемся вверх/вниз
+        self.rect.y += self.change_y
+
+        # То же самое, вот только уже для вверх/вниз
+        block_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        for block in block_hit_list:
+            # Устанавливаем нашу позицию на основе верхней / нижней части объекта, на который мы попали
+            if self.change_y > 0:
+                self.rect.bottom = block.rect.top
+            elif self.change_y < 0:
+                self.rect.top = block.rect.bottom
+
+            # Останавливаем вертикальное движение
+            self.change_y = 0
+        # Проверка на нахождение в воздухе
+        self.rect.y += 2  # Смещение немного вниз
+        platforms = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        self.rect.y -= 2  # Возвращаемся обратно
+
+        # Если нет коллизий, игрок в воздухе
+        self.in_air = not bool(platforms)
+
+    def calc_grav(self):
+        # Здесь мы вычисляем как быстро объект будет
+        # падать на землю под действием гравитации
+        if self.change_y == 0:
+            self.change_y = 1
+        else:
+            self.change_y += .95
+
+        # Если уже на земле, то ставим позицию Y как 0
+        if self.rect.y >= SCREEN_HEIGHT - self.rect.height and self.change_y >= 0:
+            self.change_y = 0
+            self.rect.y = SCREEN_HEIGHT - self.rect.height
+
+    def jump(self):
+        # Обработка прыжка
+        # Нам нужно проверять здесь, контактируем ли мы с чем-либо
+        # или другими словами, не находимся ли мы в полете.
+        # Для этого опускаемся на 10 единиц, проверем соприкосновение и далее поднимаемся обратно
+        self.rect.y += 10
+        platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+        self.rect.y -= 10
+
+        # Если все в порядке, прыгаем вверх
+        if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
+            self.change_y = -15
+
+    # Передвижение игрока
+    def go_left(self):
+        if self.in_air:
+            self.change_x = -3  # Изменение скорости при движении в воздухе
+        else:
+            self.change_x = -6
+
+        if self.right:
+            self.flip()
+            self.right = False
+
+    def go_right(self):
+        if self.in_air:
+            self.change_x = 3  # Изменение скорости при движении в воздухе
+        else:
+            self.change_x = 6
+
+        if not self.right:
+            self.flip()
+            self.right = True
 
 
+    def stop(self):
+        # вызываем этот метод, когда не нажимаем на клавиши
+        self.change_x = 0
+
+    def flip(self):
+        # переворот игрока (зеркальное отражение)
+        self.image = pygame.transform.flip(self.image, True, False)
 
 
 
+class Character1(Character):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load('idle.png')
+
+class Character2(Character):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load('idle2.png')
 
 
 # Класс для описания платформы
 class Platform(pygame.sprite.Sprite):
-	def __init__(self, width, height):
-		# Конструктор платформ
-		super().__init__()
-		# Также указываем фото платформы
-		self.image = pygame.image.load('platform.png')
+    def __init__(self, width, height):
+        # Конструктор платформ
+        super().__init__()
+        # Также указываем фото платформы
+        self.image = pygame.image.load('platform.png')
 
-		# Установите ссылку на изображение прямоугольника
-		self.rect = self.image.get_rect()
+        # Установите ссылку на изображение прямоугольника
+        self.rect = self.image.get_rect()
 
 
 # Класс для расстановки платформ на сцене
 class Level(object):
-	def __init__(self, player):
-		# Создаем группу спрайтов (поместим платформы различные сюда)
-		self.platform_list = pygame.sprite.Group()
-		# Ссылка на основного игрока
-		self.player = player
+    def __init__(self, player):
+        # Создаем группу спрайтов (поместим платформы различные сюда)
+        self.platform_list = pygame.sprite.Group()
+        # Ссылка на основного игрока
+        self.player = player
 
-	# Чтобы все рисовалось, то нужно обновлять экран
-	# При вызове этого метода обновление будет происходить
-	def update(self):
-		self.platform_list.update()
+    # Чтобы все рисовалось, то нужно обновлять экран
+    # При вызове этого метода обновление будет происходить
+    def update(self):
+        self.platform_list.update()
 
-	# Метод для рисования объектов на сцене
-	def draw(self, screen):
-		# Рисуем задний фон
-		screen.blit(bg, (0, 0))
+    # Метод для рисования объектов на сцене
+    def draw(self, screen):
+        # Рисуем задний фон
+        screen.blit(bg, (0, 0))
 
-		# Рисуем все платформы из группы спрайтов
-		self.platform_list.draw(screen)
+        # Рисуем все платформы из группы спрайтов
+        self.platform_list.draw(screen)
 
 
 # Класс, что описывает где будут находится все платформы
@@ -223,86 +230,119 @@ class Level_01(Level):
 
 # Основная функция прогарммы
 def main():
-	# Инициализация
-	pygame.init()
+    # Инициализация
+    pygame.init()
 
-	# Установка высоты и ширины
-	size = [SCREEN_WIDTH, SCREEN_HEIGHT]
-	screen = pygame.display.set_mode(size)
+    # Установка высоты и ширины
+    size = [SCREEN_WIDTH, SCREEN_HEIGHT]
+    screen = pygame.display.set_mode(size)
 
-	# Название игры
-	pygame.display.set_caption("Платформер")
+    # Название игры
+    pygame.display.set_caption("Платформер")
 
-	# Создаем игрока
-	player = Player()
+    # Создаем игрока
+    player = Character1()
+    player2 = Character2()
 
-	# Создаем все уровни
-	level_list = []
-	level_list.append(Level_01(player))
+    # Создаем все уровни
+    level_list = []
+    level_list.append(Level_01(player))
 
-	# Устанавливаем текущий уровень
-	current_level_no = 0
-	current_level = level_list[current_level_no]
+    # Устанавливаем текущий уровень
+    current_level_no = 0
+    current_level = level_list[current_level_no]
 
-	active_sprite_list = pygame.sprite.Group()
-	player.level = current_level
+    active_sprite_list = pygame.sprite.Group()
+    player.level = current_level
 
-	player.rect.x = 50
-	player.rect.y = 500
-	active_sprite_list.add(player)
+    player.rect.x = 50
+    player.rect.y = 500
+    active_sprite_list.add(player)
 
-	# Цикл будет до тех пор, пока пользователь не нажмет кнопку закрытия
-	done = False
+    # Второй игрок
+    level_list = []
+    level_list.append(Level_01(player2))
 
-	# Используется для управления скоростью обновления экрана
-	clock = pygame.time.Clock()
+    # Устанавливаем текущий уровень
+    current_level_no = 0
+    current_level = level_list[current_level_no]
 
-	# Основной цикл программы
-	while not done:
-		# Отслеживание действий
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT: # Если закрыл программу, то останавливаем цикл
-				done = True
+    active_sprite_list = pygame.sprite.Group()
+    player2.level = current_level
 
-			# Если нажали на стрелки клавиатуры, то двигаем объект
-			if event.type == pygame.KEYDOWN:
-				if event.key == pygame.K_LEFT:
-					player.go_left()
-				if event.key == pygame.K_RIGHT:
-					player.go_right()
-				if event.key == pygame.K_UP:
-					player.jump()
+    player2.rect.x = 50
+    player2.rect.y = 500
+    active_sprite_list.add(player2)
 
-			if event.type == pygame.KEYUP:
-				if event.key == pygame.K_LEFT and player.change_x < 0:
-					player.stop()
-				if event.key == pygame.K_RIGHT and player.change_x > 0:
-					player.stop()
+    # Цикл будет до тех пор, пока пользователь не нажмет кнопку закрытия
+    done = False
 
-		# Обновляем игрока
-		active_sprite_list.update()
+    # Используется для управления скоростью обновления экрана
+    clock = pygame.time.Clock()
 
-		# Обновляем объекты на сцене
-		current_level.update()
+    # Основной цикл программы
+    while not done:
+        # Отслеживание действий
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT: # Если закрыл программу, то останавливаем цикл
+                done = True
 
-		# Если игрок приблизится к правой стороне, то дальше его не двигаем
-		if player.rect.right > SCREEN_WIDTH:
-			player.rect.right = SCREEN_WIDTH
 
-		# Если игрок приблизится к левой стороне, то дальше его не двигаем
-		if player.rect.left < 0:
-			player.rect.left = 0
 
-		# Рисуем объекты на окне
-		current_level.draw(screen)
-		active_sprite_list.draw(screen)
+            # Если нажали на стрелки клавиатуры, то двигаем объект
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    player.go_left()
+                if event.key == pygame.K_RIGHT:
+                    player.go_right()
+                if event.key == pygame.K_UP:
+                    player.jump()
 
-		# Устанавливаем количество фреймов
-		clock.tick(30)
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_LEFT and player.change_x < 0:
+                    player.stop()
+                if event.key == pygame.K_RIGHT and player.change_x > 0:
+                    player.stop()
 
-		# Обновляем экран после рисования объектов
-		pygame.display.flip()
+            # Второй игрок
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_a:
+                    player2.go_left()
+                if event.key == pygame.K_d:
+                    player2.go_right()
+                if event.key == pygame.K_w:
+                    player2.jump()
 
-	# Корректное закртытие программы
-	pygame.quit()
+            if event.type == pygame.KEYUP:
+                if event.key == pygame.K_a and player2.change_x < 0:
+                    player2.stop()
+                if event.key == pygame.K_d and player2.change_x > 0:
+                    player2.stop()
+
+        # Обновляем игрока
+        active_sprite_list.update()
+
+        # Обновляем объекты на сцене
+        current_level.update()
+
+        # Если игрок приблизится к правой стороне, то дальше его не двигаем
+        if player.rect.right > SCREEN_WIDTH:
+            player.rect.right = SCREEN_WIDTH
+
+        # Если игрок приблизится к левой стороне, то дальше его не двигаем
+        if player.rect.left < 0:
+            player.rect.left = 0
+
+        # Рисуем объекты на окне
+        current_level.draw(screen)
+        active_sprite_list.draw(screen)
+
+        # Устанавливаем количество фреймов
+        clock.tick(30)
+
+        # Обновляем экран после рисования объектов
+        pygame.display.flip()
+
+    # Корректное закртытие программы
+    pygame.quit()
 main()
