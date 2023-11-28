@@ -106,9 +106,9 @@ class Character(pygame.sprite.Sprite):
     # Передвижение игрока
     def go_left(self):
         if self.in_air:
-            self.change_x = -3  # Изменение скорости при движении в воздухе
+            self.change_x = -4  # Изменение скорости при движении в воздухе
         else:
-            self.change_x = -6
+            self.change_x = -8
 
         if self.right:
             self.flip()
@@ -116,9 +116,9 @@ class Character(pygame.sprite.Sprite):
 
     def go_right(self):
         if self.in_air:
-            self.change_x = 3  # Изменение скорости при движении в воздухе
+            self.change_x = 4  # Изменение скорости при движении в воздухе
         else:
-            self.change_x = 6
+            self.change_x = 8
 
         if not self.right:
             self.flip()
@@ -314,7 +314,7 @@ def main():
         # Обновляем игрока
 
         player.update()
-        player2.update()
+
 
         # Обновляем объекты на сцене
         current_level.update()
