@@ -134,6 +134,11 @@ class Player(pygame.sprite.Sprite):
 		self.image = pygame.transform.flip(self.image, True, False)
 
 
+
+
+
+
+
 # Класс для описания платформы
 class Platform(pygame.sprite.Sprite):
 	def __init__(self, width, height):
