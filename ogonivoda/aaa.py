@@ -31,6 +31,9 @@ class Player(pygame.sprite.Sprite):
 		self.change_x = 0
 		self.change_y = 0
 
+
+		self.in_air = True
+
 	def update(self):
 		# В этой функции мы передвигаем игрока
 		# Сперва устанавливаем для него гравитацию
@@ -66,6 +69,13 @@ class Player(pygame.sprite.Sprite):
 
 			# Останавливаем вертикальное движение
 			self.change_y = 0
+		# Проверка на нахождение в воздухе
+		self.rect.y += 2  # Смещение немного вниз
+		platforms = pygame.sprite.spritecollide(self, self.level.platform_list, False)
+		self.rect.y -= 2  # Возвращаемся обратно
+
+		# Если нет коллизий, игрок в воздухе
+		self.in_air = not bool(platforms)
 
 	def calc_grav(self):
 		# Здесь мы вычисляем как быстро объект будет
@@ -91,20 +101,26 @@ class Player(pygame.sprite.Sprite):
 
 		# Если все в порядке, прыгаем вверх
 		if len(platform_hit_list) > 0 or self.rect.bottom >= SCREEN_HEIGHT:
-			self.change_y = -16
+			self.change_y = -15
 
 	# Передвижение игрока
 	def go_left(self):
-		# Сами функции будут вызваны позже из основного цикла
-		self.change_x = -9 # Двигаем игрока по Х
-		if(self.right): # Проверяем куда он смотрит и если что, то переворачиваем его
+		if self.in_air:
+			self.change_x = -3  # Изменение скорости при движении в воздухе
+		else:
+			self.change_x = -6
+
+		if self.right:
 			self.flip()
 			self.right = False
 
 	def go_right(self):
-		# то же самое, но вправо
-		self.change_x = 9
-		if (not self.right):
+		if self.in_air:
+			self.change_x = 3  # Изменение скорости при движении в воздухе
+		else:
+			self.change_x = 6
+
+		if not self.right:
 			self.flip()
 			self.right = True
 
@@ -200,13 +216,6 @@ class Level_01(Level):
 
 
 
-
-
-
-
-
-
-
 # Основная функция прогарммы
 def main():
 	# Инициализация
@@ -292,26 +301,3 @@ def main():
 	# Корректное закртытие программы
 	pygame.quit()
 main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
