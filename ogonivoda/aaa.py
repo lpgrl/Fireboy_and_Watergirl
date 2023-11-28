@@ -160,16 +160,18 @@ class Platform(pygame.sprite.Sprite):
 
 # Класс для расстановки платформ на сцене
 class Level(object):
-    def __init__(self, player):
+    def __init__(self, player, player2):
         # Создаем группу спрайтов (поместим платформы различные сюда)
         self.platform_list = pygame.sprite.Group()
         # Ссылка на основного игрока
         self.player = player
+        self.player2 = player2
 
     # Чтобы все рисовалось, то нужно обновлять экран
     # При вызове этого метода обновление будет происходить
     def update(self):
         self.platform_list.update()
+        self.player2.update()
 
     # Метод для рисования объектов на сцене
     def draw(self, screen):
@@ -183,9 +185,9 @@ class Level(object):
 # Класс, что описывает где будут находится все платформы
 # на определенном уровне игры
 class Level_01(Level):
-    def __init__(self, player):
+    def __init__(self, player, player2):
         # Вызываем родительский конструктор
-        Level.__init__(self, player)
+        Level.__init__(self, player, player2)
 
         # Массив с данными про платформы (разметка уровня)
         level = [
@@ -224,6 +226,7 @@ class Level_01(Level):
                     block.rect.x = col_idx * block_width
                     block.rect.y = row_idx * block_height
                     block.player = self.player
+                    block.player2 = self.player2
                     self.platform_list.add(block)
 
 
@@ -238,41 +241,30 @@ def main():
     screen = pygame.display.set_mode(size)
 
     # Название игры
-    pygame.display.set_caption("Платформер")
+    pygame.display.set_caption("Огонь и вода")
 
     # Создаем игрока
     player = Character1()
     player2 = Character2()
 
-    # Создаем все уровни
-    level_list = []
-    level_list.append(Level_01(player))
-
     # Устанавливаем текущий уровень
-    current_level_no = 0
-    current_level = level_list[current_level_no]
+
+    current_level = Level_01(player,player2)
+
 
     active_sprite_list = pygame.sprite.Group()
     player.level = current_level
+    player2.level = current_level
 
     player.rect.x = 50
     player.rect.y = 500
-    active_sprite_list.add(player)
-
-    # Второй игрок
-    level_list = []
-    level_list.append(Level_01(player2))
-
-    # Устанавливаем текущий уровень
-    current_level_no = 0
-    current_level = level_list[current_level_no]
-
-    active_sprite_list = pygame.sprite.Group()
-    player2.level = current_level
-
     player2.rect.x = 50
     player2.rect.y = 500
+    active_sprite_list.add(player)
     active_sprite_list.add(player2)
+
+
+
 
     # Цикл будет до тех пор, пока пользователь не нажмет кнопку закрытия
     done = False
@@ -320,10 +312,13 @@ def main():
                     player2.stop()
 
         # Обновляем игрока
-        active_sprite_list.update()
+
+        player.update()
+        player2.update()
 
         # Обновляем объекты на сцене
         current_level.update()
+
 
         # Если игрок приблизится к правой стороне, то дальше его не двигаем
         if player.rect.right > SCREEN_WIDTH:
@@ -332,6 +327,13 @@ def main():
         # Если игрок приблизится к левой стороне, то дальше его не двигаем
         if player.rect.left < 0:
             player.rect.left = 0
+
+        if player2.rect.right > SCREEN_WIDTH:
+            player2.rect.right = SCREEN_WIDTH
+
+        # Если игрок приблизится к левой стороне, то дальше его не двигаем
+        if player2.rect.left < 0:
+            player2.rect.left = 0
 
         # Рисуем объекты на окне
         current_level.draw(screen)
