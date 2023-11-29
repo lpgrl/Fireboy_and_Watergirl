@@ -77,6 +77,16 @@ class Character(pygame.sprite.Sprite):
         # Если нет коллизий, игрок в воздухе
         self.in_air = not bool(platforms)
 
+        dead_blocks = pygame.sprite.spritecollide(self, self.level.dead_block_list, False)
+        for block in dead_blocks:
+            # Перезапуск уровня при попадании на мертвые кубы
+            # Здесь можно добавить любую логику перезапуска уровня
+            # Например:
+            self.rect.x = 50
+            self.rect.y = 500
+            self.change_x = 0
+            self.change_y = 0
+
     def calc_grav(self):
         # Здесь мы вычисляем как быстро объект будет
         # падать на землю под действием гравитации
@@ -148,11 +158,11 @@ class Character2(Character):
 
 # Класс для описания платформы
 class Platform(pygame.sprite.Sprite):
-    def __init__(self, width, height):
+    def __init__(self, width, height, image_path):
         # Конструктор платформ
         super().__init__()
         # Также указываем фото платформы
-        self.image = pygame.image.load('platform.png')
+        self.image = pygame.image.load(image_path)
 
         # Установите ссылку на изображение прямоугольника
         self.rect = self.image.get_rect()
@@ -163,6 +173,7 @@ class Level(object):
     def __init__(self, player, player2):
         # Создаем группу спрайтов (поместим платформы различные сюда)
         self.platform_list = pygame.sprite.Group()
+        self.dead_block_list = pygame.sprite.Group()
         # Ссылка на основного игрока
         self.player = player
         self.player2 = player2
@@ -171,6 +182,7 @@ class Level(object):
     # При вызове этого метода обновление будет происходить
     def update(self):
         self.platform_list.update()
+        self.dead_block_list.update()
         self.player2.update()
 
     # Метод для рисования объектов на сцене
@@ -180,6 +192,7 @@ class Level(object):
 
         # Рисуем все платформы из группы спрайтов
         self.platform_list.draw(screen)
+        self.dead_block_list.draw(screen)
 
 
 # Класс, что описывает где будут находится все платформы
@@ -207,7 +220,7 @@ class Level_01(Level):
             "-   -----------         -",
             "-                       -",
             "-                -      -",
-            "-                   --  -",
+            "-                ddd--  -",
             "-                       -",
             "-                       -",
             "-------------------------"
@@ -222,12 +235,25 @@ class Level_01(Level):
             for col_idx, col in enumerate(row):
                 # Если символ в разметке level - "-", то создаем блок платформы
                 if col == "-":
-                    block = Platform(block_width, block_height)
+                    block = Platform(block_width, block_height, 'platform.png')
                     block.rect.x = col_idx * block_width
                     block.rect.y = row_idx * block_height
                     block.player = self.player
                     block.player2 = self.player2
                     self.platform_list.add(block)
+        self.dead_block_list = pygame.sprite.Group()
+
+        # Перебираем каждую строку в массиве level
+        for row_idx, row in enumerate(level):
+            for col_idx, col in enumerate(row):
+                # Если символ в разметке level - "d", то создаем мертвый куб
+                if col == "d":
+                    dead_block = Platform(block_width, block_height, 'sliz.png')
+                    dead_block.rect.x = col_idx * block_width
+                    dead_block.rect.y = row_idx * block_height
+                    dead_block.player = self.player
+                    dead_block.player2 = self.player2
+                    self.dead_block_list.add(dead_block)
 
 
 
