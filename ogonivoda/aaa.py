@@ -6,25 +6,23 @@ SCREEN_HEIGHT = 640
 
 # Подключение фото для заднего фона
 # Здесь лишь создание переменной, вывод заднего фона ниже в коде
-bg = pygame.image.load('bg.jpg')
+bg = pygame.image.load('bg.png')
 
 
 # Класс, описывающий поведение главного игрока
 class Character(pygame.sprite.Sprite):
     # Изначально игрок смотрит вправо, поэтому эта переменная True
-    right = True
+
 
     # Методы
-    def __init__(self):
-        # Стандартный конструктор класса
-        # Нужно ещё вызывать конструктор родительского класса
+    def __init__(self, idle_image, move_images):
         super().__init__()
 
-        # Создаем изображение для игрока
-        # Изображение находится в этой же папке проекта
-        self.image = pygame.image.load('idle.png')
+        # Загрузка изображений
+        self.idle_image = pygame.image.load(idle_image)
+        self.move_images = [pygame.image.load(img) for img in move_images]
+        self.image = self.idle_image
 
-        # Установите ссылку на изображение прямоугольника
         self.rect = self.image.get_rect()
 
         # Задаем вектор скорости игрока
@@ -33,6 +31,13 @@ class Character(pygame.sprite.Sprite):
 
 
         self.in_air = True
+
+        # Дополнительные переменные для анимации
+        self.move_frame = 0
+        self.last_update = pygame.time.get_ticks()
+        self.frame_rate = 100  # Скорость смены кадров анимации
+
+
 
     def update(self):
         # В этой функции мы передвигаем игрока
@@ -92,6 +97,22 @@ class Character(pygame.sprite.Sprite):
             self.level.player2.change_x = 0
             self.level.player2.change_y = 0
 
+        # Обновление анимации
+        now = pygame.time.get_ticks()
+        if self.change_x < 0:  # Если игрок движется влево
+            if now - self.last_update > self.frame_rate:
+                self.last_update = now
+                self.move_frame = (self.move_frame + 1) % len(self.move_images)
+                self.image = self.move_images[self.move_frame]
+        elif self.change_x > 0:  # Если игрок движется вправо
+            if now - self.last_update > self.frame_rate:
+                self.last_update = now
+                self.move_frame = (self.move_frame + 1) % len(self.move_images)
+                self.image = self.move_images_right[self.move_frame]
+        else:  # Если игрок стоит
+            self.image = self.idle_image
+
+
     def calc_grav(self):
         # Здесь мы вычисляем как быстро объект будет
         # падать на землю под действием гравитации
@@ -125,9 +146,8 @@ class Character(pygame.sprite.Sprite):
         else:
             self.change_x = -8
 
-        if self.right:
-            self.flip()
-            self.right = False
+
+
 
     def go_right(self):
         if self.in_air:
@@ -135,30 +155,30 @@ class Character(pygame.sprite.Sprite):
         else:
             self.change_x = 8
 
-        if not self.right:
-            self.flip()
-            self.right = True
+
 
 
     def stop(self):
         # вызываем этот метод, когда не нажимаем на клавиши
         self.change_x = 0
 
-    def flip(self):
-        # переворот игрока (зеркальное отражение)
-        self.image = pygame.transform.flip(self.image, True, False)
 
 
 
+
+
+# Класс Character1
 class Character1(Character):
     def __init__(self):
-        super().__init__()
-        self.image = pygame.image.load('idle.png')
+        super().__init__('ogon/fire.png', ['ogon/fire_left_1.png', 'ogon/fire_left_2.png', 'ogon/fire_left_3.png', 'ogon/fire_left_4.png'])
+        self.move_images_right = [pygame.image.load(img) for img in ['ogon/fire_right_1.png', 'ogon/fire_right_2.png', 'ogon/fire_right_3.png', 'ogon/fire_right_4.png']]
 
+# Класс Character2
 class Character2(Character):
     def __init__(self):
-        super().__init__()
-        self.image = pygame.image.load('idle2.png')
+        super().__init__('voda/water.png', ['voda/water_left_1.png', 'voda/water_left_2.png', 'voda/water_left_3.png', 'voda/water_left_4.png'])
+        self.move_images_right = [pygame.image.load(img) for img in ['voda/water_right_1.png', 'voda/water_right_2.png', 'voda/water_right_3.png', 'voda/water_right_4.png']]
+
 
 
 # Класс для описания платформы
@@ -399,3 +419,6 @@ def main():
     # Корректное закртытие программы
     pygame.quit()
 main()
+
+
+
