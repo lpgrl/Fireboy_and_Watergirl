@@ -97,6 +97,11 @@ class Character(pygame.sprite.Sprite):
             self.level.player2.change_x = 0
             self.level.player2.change_y = 0
 
+            self.level.player.rect.x = 50
+            self.level.player.rect.y = 550
+            self.level.player.change_x = 0
+            self.level.player.change_y = 0
+
         # Обновление анимации
         now = pygame.time.get_ticks()
         if self.change_x < 0:  # Если игрок движется влево
