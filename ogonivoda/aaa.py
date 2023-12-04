@@ -185,6 +185,7 @@ class Character2(Character):
         super().__init__('voda/water.png', ['voda/water_left_1.png', 'voda/water_left_2.png', 'voda/water_left_3.png', 'voda/water_left_4.png'])
         self.move_images_right = [pygame.image.load(img) for img in ['voda/water_right_1.png', 'voda/water_right_2.png', 'voda/water_right_3.png', 'voda/water_right_4.png']]
 
+# Классы блоков
 class WaterBlock(pygame.sprite.Sprite):
     def __init__(self, width, height, image_path):
         super().__init__()
@@ -502,5 +503,3 @@ def main():
     # Корректное закрытие программы
     pygame.quit()
 main()
-
-
