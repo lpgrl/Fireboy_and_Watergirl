@@ -73,47 +73,46 @@ class Character(pygame.sprite.Sprite):
         # Если нет коллизий, игрок в воздухе
         self.in_air = not bool(platforms)
 
+        water_blocks = pygame.sprite.spritecollide(self, self.level.water_block_list, False)
+        fire_blocks = pygame.sprite.spritecollide(self, self.level.fire_block_list, False)
+        win_blocks = pygame.sprite.spritecollide(self, self.level.win_list, False)
         dead_blocks = pygame.sprite.spritecollide(self, self.level.dead_block_list, False)
 
         for block in dead_blocks:
-            # Перезапуск уровня при попадании на слизь
             self.rect.x = 50
-            self.rect.y = 550
+            self.rect.y = 585
             self.change_x = 0
             self.change_y = 0
 
             self.level.player2.rect.x = 50
-            self.level.player2.rect.y = 550
+            self.level.player2.rect.y = 585
             self.level.player2.change_x = 0
             self.level.player2.change_y = 0
 
             self.level.player.rect.x = 50
-            self.level.player.rect.y = 550
+            self.level.player.rect.y = 585
             self.level.player.change_x = 0
             self.level.player.change_y = 0
 
-        water_blocks = pygame.sprite.spritecollide(self, self.level.water_block_list, False)
-        fire_blocks = pygame.sprite.spritecollide(self, self.level.fire_block_list, False)
-
         if water_blocks and self is self.level.player:
             self.level.player.rect.x = 50
-            self.level.player.rect.y = 550
+            self.level.player.rect.y = 585
             self.level.player.change_x = 0
             self.level.player.change_y = 0
 
             self.level.player2.rect.x = 50
-            self.level.player2.rect.y = 550
+            self.level.player2.rect.y = 585
             self.level.player2.change_x = 0
             self.level.player2.change_y = 0
 
         elif fire_blocks and self is self.level.player2:
             self.level.player.rect.x = 50
-            self.level.player.rect.y = 550
+            self.level.player.rect.y = 585
             self.level.player.change_x = 0
             self.level.player.change_y = 0
 
             self.level.player2.rect.x = 50
-            self.level.player2.rect.y = 550
+            self.level.player2.rect.y = 585
             self.level.player2.change_x = 0
             self.level.player2.change_y = 0
 
@@ -198,6 +197,18 @@ class FireBlock(pygame.sprite.Sprite):
         self.image = pygame.image.load(image_path)
         self.rect = self.image.get_rect()
 
+class DeathBlock(pygame.sprite.Sprite):
+    def __init__(self, width, height, image_path):
+        super().__init__()
+        self.image = pygame.image.load(image_path)
+        self.rect = self.image.get_rect()
+
+class WinBlock(pygame.sprite.Sprite):
+    def __init__(self, width, height, image_path):
+        super().__init__()
+        self.image = pygame.image.load(image_path)
+        self.rect = self.image.get_rect()
+
 # Класс для описания платформы
 class Platform(pygame.sprite.Sprite):
     def __init__(self, width, height, image_path):
@@ -210,7 +221,6 @@ class Level(object):
     def __init__(self, player, player2):
         # Создаем группу спрайтов (поместим платформы различные сюда)
         self.platform_list = pygame.sprite.Group()
-        self.dead_block_list = pygame.sprite.Group()
 
         self.player = player
         self.player2 = player2
@@ -230,6 +240,7 @@ class Level(object):
         self.dead_block_list.draw(screen)
         self.water_block_list.draw(screen)
         self.fire_block_list.draw(screen)
+        self.win_list.draw(screen)
 
 
 # Класс, что описывает где будут находится все платформы
@@ -272,15 +283,15 @@ class Level_01(Level):
             "-               -                           ---  -",
             "-                      ------                    -",
             "-               --                               -",
-            "-      ---                                       -",
-            "-                                                -",
-            "-   -----------                                  -",
+            "---GGG-----------------------------------        -",
             "-                                                -",
             "-                                                -",
-            "-                       ddd                 --   -",
+            "-                                                -",
+            "-                                              ---",
             "-                                                -",
             "-                                                -",
-            "---------------WWW-------------FFF----------------"
+            "-                                                -",
+            "--------------wWWWWWV----ddd----fFFFFFFP-----------"
         ]
 
         # Размеры блоков
@@ -290,6 +301,7 @@ class Level_01(Level):
         self.water_block_list = pygame.sprite.Group()
         self.fire_block_list = pygame.sprite.Group()
         self.dead_block_list = pygame.sprite.Group()
+        self.win_list = pygame.sprite.Group()
 
         # Перебираем каждую строку в массиве level
         for row_idx, row in enumerate(level):
@@ -302,22 +314,50 @@ class Level_01(Level):
                     block.player2 = self.player2
                     self.platform_list.add(block)
                 elif col == "W":
-                    water_block = WaterBlock(block_width, block_height, 'water.png')
+                    water_block = WaterBlock(block_width, block_height, 'vodichka/water.png')
+                    water_block.rect.x = col_idx * block_width
+                    water_block.rect.y = row_idx * block_height
+                    self.water_block_list.add(water_block)
+                elif col == "w":
+                    water_block = WaterBlock(block_width, block_height, 'vodichka/water_left.png')
+                    water_block.rect.x = col_idx * block_width
+                    water_block.rect.y = row_idx * block_height
+                    self.water_block_list.add(water_block)
+                elif col == "V":
+                    water_block = WaterBlock(block_width, block_height, 'vodichka/water_right.png')
                     water_block.rect.x = col_idx * block_width
                     water_block.rect.y = row_idx * block_height
                     self.water_block_list.add(water_block)
                 elif col == "F":
-                    fire_block = FireBlock(block_width, block_height, 'lava.png')
+                    fire_block = FireBlock(block_width, block_height, 'lava/lava.png')
+                    fire_block.rect.x = col_idx * block_width
+                    fire_block.rect.y = row_idx * block_height
+                    self.fire_block_list.add(fire_block)
+                elif col == "f":
+                    fire_block = FireBlock(block_width, block_height, 'lava/lava_left.png')
+                    fire_block.rect.x = col_idx * block_width
+                    fire_block.rect.y = row_idx * block_height
+                    self.fire_block_list.add(fire_block)
+                elif col == "P":
+                    fire_block = FireBlock(block_width, block_height, 'lava/lava_right.png')
                     fire_block.rect.x = col_idx * block_width
                     fire_block.rect.y = row_idx * block_height
                     self.fire_block_list.add(fire_block)
                 elif col == "d":
-                    dead_block = Platform(block_width, block_height, 'sliz.png')
+                    dead_block = DeathBlock(block_width, block_height, 'sliz.png')
                     dead_block.rect.x = col_idx * block_width
                     dead_block.rect.y = row_idx * block_height
-                    dead_block.player = self.player
-                    dead_block.player2 = self.player2
                     self.dead_block_list.add(dead_block)
+                elif col == "G":
+                    win_block = WinBlock(block_width, block_height, 'lava/lava_right.png')
+                    win_block.rect.x = col_idx * block_width
+                    win_block.rect.y = row_idx * block_height
+                    self.win_list.add(win_block)
+
+    def check_win_condition(self):
+        win_blocks_collided = pygame.sprite.spritecollide(self.player, self.win_list, False)
+        win_blocks_collided2 = pygame.sprite.spritecollide(self.player2, self.win_list, False)
+        return len(win_blocks_collided) > 0 and len(win_blocks_collided2) > 0
 
 # Основная функция программы
 def main():
@@ -344,9 +384,9 @@ def main():
     player2.level = current_level
 
     player.rect.x = 50
-    player.rect.y = 550
+    player.rect.y = 585
     player2.rect.x = 50
-    player2.rect.y = 550
+    player2.rect.y = 585
     active_sprite_list.add(player)
     active_sprite_list.add(player2)
 
@@ -392,8 +432,43 @@ def main():
                     player2.stop()
                 if event.key == pygame.K_d and player2.change_x > 0:
                     player2.stop()
+        if current_level.check_win_condition():
+            print("Вы прошли игру! Поздравляем!")
+            print()
+            print('______________________¶¶¶')
+            print('___________________¶¶¶¶¶')
+            print('__________________¶¶¶¶¶¶')
+            print('________________¶¶¶¶¶¶¶')
+            print('_______________¶¶¶¶¶¶¶¶')
+            print('_______________¶¶¶¶¶¶¶¶')
+            print('______________¶¶¶¶¶¶¶¶¶¶')
+            print('______________¶¶¶¶¶¶¶¶¶¶')
+            print('______________¶¶¶¶¶¶¶¶¶¶¶______________¶¶¶')
+            print('______________¶¶¶¶¶¶¶¶¶¶¶¶___________¶¶¶¶')
+            print('_______¶______¶¶¶¶¶¶¶¶¶¶¶¶¶________¶¶¶¶¶¶')
+            print('_______¶¶¶¶____¶¶¶¶¶¶¶¶¶¶¶¶¶______¶¶¶¶¶¶¶')
+            print('_______¶¶¶¶¶___¶¶¶¶¶¶¶¶¶¶¶¶¶¶____¶¶¶¶¶¶¶¶')
+            print('_______¶¶¶¶¶¶___¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶__¶¶¶¶¶¶¶¶')
+            print('_______¶¶¶¶¶¶¶__¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('_______¶¶¶¶¶¶¶__¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('______¶¶¶¶¶¶¶¶__¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('_____¶¶¶¶¶¶¶¶¶_¶¶¶¶¶¶¶¶¶¶__¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('___¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶___¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('__¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶___¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('__¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶____¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('_¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶_¶¶¶¶¶¶____¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('_¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶__¶¶¶______¶¶¶_¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('_¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶___¶________¶¶__¶¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('_¶¶¶¶¶¶¶¶¶¶¶¶¶¶_____________¶¶__¶¶¶¶¶¶¶¶¶¶¶¶¶¶')
+            print('_¶¶¶¶¶¶¶¶¶¶¶¶¶¶______________¶____¶¶¶¶¶¶¶¶¶¶¶')
+            print('__¶¶¶¶¶¶¶¶¶¶¶¶_____________________¶¶¶¶¶¶¶¶¶')
+            print('____¶¶¶¶¶¶¶¶¶¶_____________________¶¶¶¶¶¶¶¶')
+            print('______¶¶¶¶¶¶¶¶_____________________¶¶¶¶¶¶')
+            print('_________¶¶¶¶¶¶___________________¶¶¶¶')
+            print('_____________¶¶¶¶¶______________¶')
+            done = True
 
-        # Обновляем игрока
+            # Обновляем игрока
         player.update()
 
         # Обновляем объекты на сцене
