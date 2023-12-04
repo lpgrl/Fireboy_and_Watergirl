@@ -5,15 +5,9 @@ SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 640
 
 # Подключение фото для заднего фона
-# Здесь лишь создание переменной, вывод заднего фона ниже в коде
 bg = pygame.image.load('bg.png')
 
-
-# Класс, описывающий поведение главного игрока
 class Character(pygame.sprite.Sprite):
-    # Изначально игрок смотрит вправо, поэтому эта переменная True
-
-
     # Методы
     def __init__(self, idle_image, move_images):
         super().__init__()
@@ -29,15 +23,12 @@ class Character(pygame.sprite.Sprite):
         self.change_x = 0
         self.change_y = 0
 
-
         self.in_air = True
 
         # Дополнительные переменные для анимации
         self.move_frame = 0
         self.last_update = pygame.time.get_ticks()
         self.frame_rate = 100  # Скорость смены кадров анимации
-
-
 
     def update(self):
         # В этой функции мы передвигаем игрока
@@ -71,9 +62,9 @@ class Character(pygame.sprite.Sprite):
                 self.rect.bottom = block.rect.top
             elif self.change_y < 0:
                 self.rect.top = block.rect.bottom
-
             # Останавливаем вертикальное движение
             self.change_y = 0
+
         # Проверка на нахождение в воздухе
         self.rect.y += 2  # Смещение немного вниз
         platforms = pygame.sprite.spritecollide(self, self.level.platform_list, False)
@@ -83,10 +74,9 @@ class Character(pygame.sprite.Sprite):
         self.in_air = not bool(platforms)
 
         dead_blocks = pygame.sprite.spritecollide(self, self.level.dead_block_list, False)
+
         for block in dead_blocks:
-            # Перезапуск уровня при попадании на мертвые кубы
-            # Здесь можно добавить любую логику перезапуска уровня
-            # Например:
+            # Перезапуск уровня при попадании на слизь
             self.rect.x = 50
             self.rect.y = 550
             self.change_x = 0
@@ -102,6 +92,31 @@ class Character(pygame.sprite.Sprite):
             self.level.player.change_x = 0
             self.level.player.change_y = 0
 
+        water_blocks = pygame.sprite.spritecollide(self, self.level.water_block_list, False)
+        fire_blocks = pygame.sprite.spritecollide(self, self.level.fire_block_list, False)
+
+        if water_blocks and self is self.level.player:
+            self.level.player.rect.x = 50
+            self.level.player.rect.y = 550
+            self.level.player.change_x = 0
+            self.level.player.change_y = 0
+
+            self.level.player2.rect.x = 50
+            self.level.player2.rect.y = 550
+            self.level.player2.change_x = 0
+            self.level.player2.change_y = 0
+
+        elif fire_blocks and self is self.level.player2:
+            self.level.player.rect.x = 50
+            self.level.player.rect.y = 550
+            self.level.player.change_x = 0
+            self.level.player.change_y = 0
+
+            self.level.player2.rect.x = 50
+            self.level.player2.rect.y = 550
+            self.level.player2.change_x = 0
+            self.level.player2.change_y = 0
+
         # Обновление анимации
         now = pygame.time.get_ticks()
         if self.change_x < 0:  # Если игрок движется влево
@@ -116,7 +131,6 @@ class Character(pygame.sprite.Sprite):
                 self.image = self.move_images_right[self.move_frame]
         else:  # Если игрок стоит
             self.image = self.idle_image
-
 
     def calc_grav(self):
         # Здесь мы вычисляем как быстро объект будет
@@ -134,7 +148,6 @@ class Character(pygame.sprite.Sprite):
     def jump(self):
         # Обработка прыжка
         # Нам нужно проверять здесь, контактируем ли мы с чем-либо
-        # или другими словами, не находимся ли мы в полете.
         # Для этого опускаемся на 10 единиц, проверем соприкосновение и далее поднимаемся обратно
         self.rect.y += 10
         platform_hit_list = pygame.sprite.spritecollide(self, self.level.platform_list, False)
@@ -151,26 +164,15 @@ class Character(pygame.sprite.Sprite):
         else:
             self.change_x = -8
 
-
-
-
     def go_right(self):
         if self.in_air:
             self.change_x = 4  # Изменение скорости при движении в воздухе
         else:
             self.change_x = 8
 
-
-
-
     def stop(self):
         # вызываем этот метод, когда не нажимаем на клавиши
         self.change_x = 0
-
-
-
-
-
 
 # Класс Character1
 class Character1(Character):
@@ -184,19 +186,24 @@ class Character2(Character):
         super().__init__('voda/water.png', ['voda/water_left_1.png', 'voda/water_left_2.png', 'voda/water_left_3.png', 'voda/water_left_4.png'])
         self.move_images_right = [pygame.image.load(img) for img in ['voda/water_right_1.png', 'voda/water_right_2.png', 'voda/water_right_3.png', 'voda/water_right_4.png']]
 
+class WaterBlock(pygame.sprite.Sprite):
+    def __init__(self, width, height, image_path):
+        super().__init__()
+        self.image = pygame.image.load(image_path)
+        self.rect = self.image.get_rect()
 
+class FireBlock(pygame.sprite.Sprite):
+    def __init__(self, width, height, image_path):
+        super().__init__()
+        self.image = pygame.image.load(image_path)
+        self.rect = self.image.get_rect()
 
 # Класс для описания платформы
 class Platform(pygame.sprite.Sprite):
     def __init__(self, width, height, image_path):
-        # Конструктор платформ
         super().__init__()
-        # Также указываем фото платформы
         self.image = pygame.image.load(image_path)
-
-        # Установите ссылку на изображение прямоугольника
         self.rect = self.image.get_rect()
-
 
 # Класс для расстановки платформ на сцене
 class Level(object):
@@ -204,12 +211,10 @@ class Level(object):
         # Создаем группу спрайтов (поместим платформы различные сюда)
         self.platform_list = pygame.sprite.Group()
         self.dead_block_list = pygame.sprite.Group()
-        # Ссылка на основного игрока
+
         self.player = player
         self.player2 = player2
 
-    # Чтобы все рисовалось, то нужно обновлять экран
-    # При вызове этого метода обновление будет происходить
     def update(self):
         self.platform_list.update()
         self.dead_block_list.update()
@@ -223,6 +228,8 @@ class Level(object):
         # Рисуем все платформы из группы спрайтов
         self.platform_list.draw(screen)
         self.dead_block_list.draw(screen)
+        self.water_block_list.draw(screen)
+        self.fire_block_list.draw(screen)
 
 
 # Класс, что описывает где будут находится все платформы
@@ -269,21 +276,24 @@ class Level_01(Level):
             "-                                                -",
             "-   -----------                                  -",
             "-                                                -",
-            "-                -                               -",
+            "-                                                -",
             "-                       ddd                 --   -",
             "-                                                -",
             "-                                                -",
-            "--------------------------------------------------"
+            "---------------WWW-------------FFF----------------"
         ]
 
         # Размеры блоков
         block_width = 16
         block_height = 16
 
+        self.water_block_list = pygame.sprite.Group()
+        self.fire_block_list = pygame.sprite.Group()
+        self.dead_block_list = pygame.sprite.Group()
+
         # Перебираем каждую строку в массиве level
         for row_idx, row in enumerate(level):
             for col_idx, col in enumerate(row):
-                # Если символ в разметке level - "-", то создаем блок платформы
                 if col == "-":
                     block = Platform(block_width, block_height, 'platform.png')
                     block.rect.x = col_idx * block_width
@@ -291,13 +301,17 @@ class Level_01(Level):
                     block.player = self.player
                     block.player2 = self.player2
                     self.platform_list.add(block)
-        self.dead_block_list = pygame.sprite.Group()
-
-        # Перебираем каждую строку в массиве level
-        for row_idx, row in enumerate(level):
-            for col_idx, col in enumerate(row):
-                # Если символ в разметке level - "d", то создаем мертвый куб
-                if col == "d":
+                elif col == "W":
+                    water_block = WaterBlock(block_width, block_height, 'water.png')
+                    water_block.rect.x = col_idx * block_width
+                    water_block.rect.y = row_idx * block_height
+                    self.water_block_list.add(water_block)
+                elif col == "F":
+                    fire_block = FireBlock(block_width, block_height, 'lava.png')
+                    fire_block.rect.x = col_idx * block_width
+                    fire_block.rect.y = row_idx * block_height
+                    self.fire_block_list.add(fire_block)
+                elif col == "d":
                     dead_block = Platform(block_width, block_height, 'sliz.png')
                     dead_block.rect.x = col_idx * block_width
                     dead_block.rect.y = row_idx * block_height
@@ -305,9 +319,7 @@ class Level_01(Level):
                     dead_block.player2 = self.player2
                     self.dead_block_list.add(dead_block)
 
-
-
-# Основная функция прогарммы
+# Основная функция программы
 def main():
     # Инициализация
     pygame.init()
@@ -327,7 +339,6 @@ def main():
 
     current_level = Level_01(player,player2)
 
-
     active_sprite_list = pygame.sprite.Group()
     player.level = current_level
     player2.level = current_level
@@ -338,9 +349,6 @@ def main():
     player2.rect.y = 550
     active_sprite_list.add(player)
     active_sprite_list.add(player2)
-
-
-
 
     # Цикл будет до тех пор, пока пользователь не нажмет кнопку закрытия
     done = False
@@ -354,8 +362,6 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT: # Если закрыл программу, то останавливаем цикл
                 done = True
-
-
 
             # Если нажали на стрелки клавиатуры, то двигаем объект
             if event.type == pygame.KEYDOWN:
@@ -388,13 +394,10 @@ def main():
                     player2.stop()
 
         # Обновляем игрока
-
         player.update()
-
 
         # Обновляем объекты на сцене
         current_level.update()
-
 
         # Если игрок приблизится к правой стороне, то дальше его не двигаем
         if player.rect.right > SCREEN_WIDTH:
@@ -421,9 +424,8 @@ def main():
         # Обновляем экран после рисования объектов
         pygame.display.flip()
 
-    # Корректное закртытие программы
+    # Корректное закрытие программы
     pygame.quit()
 main()
-
 
 
